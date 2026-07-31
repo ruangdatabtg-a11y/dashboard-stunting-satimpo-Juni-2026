@@ -657,14 +657,14 @@ def page_asi_mpasi(df):
     if col:
         st.markdown('<div class="sh">🥣 Umur Mulai Makanan Pendamping ASI</div>',unsafe_allow_html=True)
         order=["0 - 7 hari","8 - 29 hari","1 - < 2 bulan","2 - < 3 bulan","3 - < 4 bulan","4 - < 5 bulan","5 - < 6 bulan","6 - < 7 bulan","≥ 7 bulan"]
-        md=df[col].value_counts().reindex(order).dropna().reset_index(); md.columns=['Umur','Jumlah']
+        md=df[col].value_counts().reindex(order).fillna(0).astype(int).reset_index(); md.columns=['Umur','Jumlah']
         fig=px.bar(md,x='Umur',y='Jumlah',text='Jumlah',title='📊 Distribusi Umur Mulai Makanan Pendamping ASI',color_discrete_sequence=['#F59E0B'])
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
-        # PERBAIKAN: Garis threshold di antara index 6 ('5 - <6 bulan') dan index 7 ('6 - <7 bulan')
-        # Index dimulai dari 0, jadi posisi x = 6.5
+        # Garis batas: antara "5 - < 6 bulan" (index 6) dan "6 - < 7 bulan" (index 7) → x=6.5
+        # Dengan fillna(0), semua 9 kategori selalu ada sehingga posisi index tetap konsisten
         fig.add_shape(type="line", x0=6.5, x1=6.5, y0=0, y1=1, yref="paper",
                      line=dict(color="red", width=2.5, dash="dash"))
-        fig.add_annotation(x=6.5, y=1, yref="paper", text="< 6 bulan (MPASI Dini)",
+        fig.add_annotation(x=6.5, y=1, yref="paper", text="< 6 bulan (Makanan Pendamping Dini)",
                           showarrow=False, font=dict(color="red", size=FONT_SIZE-1, weight="bold"),
                           xanchor="right", yanchor="bottom", xshift=-4)
         fig.update_layout(
