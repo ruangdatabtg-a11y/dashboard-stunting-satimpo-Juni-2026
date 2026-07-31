@@ -187,7 +187,7 @@ def bar_multi(df, col, items, labels, title, clr="#0D9488"):
     fig.update_traces(textposition="outside", cliponaxis=False, textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
     fig.update_layout(
         font=dict(size=FONT_SIZE, color='#1E293B'),
-        title_font=dict(size=FONT_SIZE_TITLE),
+        title=dict(font=dict(size=FONT_SIZE_TITLE)),
         height=max(300, len(rows)*55),
         xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
         yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -204,7 +204,7 @@ def bar_yn(df, col, title, clr="#0D9488"):
     ya = (df[col].astype(str).str.strip().str.lower() == "ya").sum()
     return ya, n
 
-def dist_bar(series, bins, labels, title, clr, threshold_index=None, threshold_label=None):
+def dist_bar(series, bins, labels, title, clr, threshold_index=None, threshold_label=None, xaxis_title="Interval"):
     """Create distribution bar chart with optional threshold line at specific index"""
     s = pd.to_numeric(series.astype(str).str.replace(",","."), errors='coerce').dropna()
     cat = pd.cut(s, bins=bins, labels=labels, right=False)
@@ -215,8 +215,6 @@ def dist_bar(series, bins, labels, title, clr, threshold_index=None, threshold_l
     
     # Tambahkan garis threshold jika ada
     if threshold_index is not None and threshold_label is not None:
-        # threshold_index adalah posisi bar dimana garis akan diletakkan
-        # Garis diletakkan di antara bar threshold_index-1 dan threshold_index
         x_pos = threshold_index - 0.5
         fig.add_shape(type="line", 
                      x0=x_pos, 
@@ -237,10 +235,10 @@ def dist_bar(series, bins, labels, title, clr, threshold_index=None, threshold_l
     
     fig.update_layout(
         font=dict(size=FONT_SIZE, color='#1E293B'),
-        title_font=dict(size=FONT_SIZE_TITLE),
+        title=dict(font=dict(size=FONT_SIZE_TITLE)),
         height=400,
-        xaxis=dict(tickfont=dict(size=FONT_SIZE)),
-        yaxis=dict(tickfont=dict(size=FONT_SIZE)),
+        xaxis=dict(title=xaxis_title, tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
+        yaxis=dict(title="Jumlah", tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
         margin=dict(l=10,r=10,t=70,b=30), 
         showlegend=False
     )
@@ -328,7 +326,7 @@ def page_ringkasan(df):
         fig.add_vline(x=14.05,line_dash='dash',line_color='#0F766E',annotation_text='Kota Bontang: 14,05%',annotation_font_color='#1E293B',annotation_position='bottom right')
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=550,
             xaxis=dict(range=[0,25], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -355,13 +353,13 @@ def page_ringkasan(df):
     c1,c2=st.columns(2)
     with c1:
         if umur_bulan is not None:
-            fig,m,mn,_=dist_bar(umur_bulan,[0,6,12,24,36,48,60],['0-5 bln','6-11 bln','12-23 bln','24-35 bln','36-47 bln','48-59 bln'],'📊 Umur Balita','#0D9488')
+            fig,m,mn,_=dist_bar(umur_bulan,[0,6,12,24,36,48,60],['0-5 bln','6-11 bln','12-23 bln','24-35 bln','36-47 bln','48-59 bln'],'📊 Umur Balita','#0D9488', xaxis_title="Umur (bulan)")
             st.plotly_chart(fig,use_container_width=True); del fig
             st.markdown(f'<div class="card">👶 Terbanyak: <b>{m}</b> ({mn} balita)</div>',unsafe_allow_html=True)
     with c2:
         col=g(df,'bb_balita')
         if col:
-            fig,m,mn,_=dist_bar(df[col],[0,6,8,10,12,14,16,20],['< 6','6-7,9','8-9,9','10-11,9','12-13,9','14-15,9','≥ 16'],'📊 Berat Badan Balita (kg)','#2563EB')
+            fig,m,mn,_=dist_bar(df[col],[0,6,8,10,12,14,16,20],['< 6','6-7,9','8-9,9','10-11,9','12-13,9','14-15,9','≥ 16'],'📊 Berat Badan Balita (kg)','#2563EB', xaxis_title="Berat Badan (kg)")
             st.plotly_chart(fig,use_container_width=True); del fig
             st.markdown(f'<div class="card">⚖️ Terbanyak: <b>{m} kg</b> ({mn} balita)</div>',unsafe_allow_html=True)
 
@@ -369,7 +367,7 @@ def page_ringkasan(df):
     with c3:
         col=g(df,'umur_ibu')
         if col:
-            fig,m,mn,_=dist_bar(df[col],[15,20,25,30,35,40,50],['15-19','20-24','25-29','30-34','35-39','≥ 40'],'📊 Umur Ibu saat Hamil','#7C3AED')
+            fig,m,mn,_=dist_bar(df[col],[15,20,25,30,35,40,50],['15-19','20-24','25-29','30-34','35-39','≥ 40'],'📊 Umur Ibu saat Hamil','#7C3AED', xaxis_title="Umur Ibu (tahun)")
             st.plotly_chart(fig,use_container_width=True); del fig
             st.markdown(f'<div class="card">👩 Terbanyak: <b>{m} tahun</b> ({mn} ibu)</div>',unsafe_allow_html=True)
     with c4:
@@ -400,7 +398,8 @@ def page_ringkasan(df):
         with c1:
             fig,m,mn,s=dist_bar(df[col],[0,2500,3000,3500,4000,5000],
                                ['< 2500','2500-2999','3000-3499','3500-3999','≥ 4000'],
-                               '📊 BB Lahir (gram)','#0D9488',1,'< 2500 g (BBLR)')
+                               '📊 BB Lahir (gram)','#0D9488',1,'< 2500 g (BBLR)',
+                               xaxis_title="Berat Lahir (gram)")
             st.plotly_chart(fig,use_container_width=True); del fig
             cnt=(s<2500).sum()
             st.markdown(f'<div class="card">Terbanyak: <b>{m}</b> ({mn}) | ⚠️ BBLR: <b>{cnt}</b> ({fmt(pct(cnt,len(s)))})</div>',unsafe_allow_html=True)
@@ -411,7 +410,8 @@ def page_ringkasan(df):
         with c2:
             fig,m,mn,s=dist_bar(df[col],[0,48,50,52,55],
                                ['< 48','48-49','50-51','≥ 52'],
-                               '📊 PB Lahir (cm)','#2563EB',1,'< 48 cm (Pendek)')
+                               '📊 PB Lahir (cm)','#2563EB',1,'< 48 cm (Pendek)',
+                               xaxis_title="Panjang Lahir (cm)")
             st.plotly_chart(fig,use_container_width=True); del fig
             cnt=(s<48).sum()
             st.markdown(f'<div class="card">Terbanyak: <b>{m}</b> ({mn}) | ⚠️ Pendek: <b>{cnt}</b> ({fmt(pct(cnt,len(s)))})</div>',unsafe_allow_html=True)
@@ -422,7 +422,8 @@ def page_ringkasan(df):
         with c3:
             fig,m,mn,s=dist_bar(df[col],[0,37,39,41,45],
                                ['< 37','37-38','39-40','≥ 41'],
-                               '📊 Usia Kehamilan (mg)','#7C3AED',1,'< 37 mg (Prematur)')
+                               '📊 Usia Kehamilan (mg)','#7C3AED',1,'< 37 mg (Prematur)',
+                               xaxis_title="Usia Kehamilan (minggu)")
             st.plotly_chart(fig,use_container_width=True); del fig
             cnt=(s<37).sum()
             st.markdown(f'<div class="card">Terbanyak: <b>{m}</b> ({mn}) | ⚠️ Prematur: <b>{cnt}</b> ({fmt(pct(cnt,len(s)))})</div>',unsafe_allow_html=True)
@@ -438,13 +439,13 @@ def page_kehamilan(df):
     with c1:
         col=g(df,'umur_ibu')
         if col:
-            fig,m,mn,_=dist_bar(df[col],[15,20,25,30,35,40,50],['15-19','20-24','25-29','30-34','35-39','≥ 40'],'📊 Umur Ibu saat Hamil (tahun)','#7C3AED')
+            fig,m,mn,_=dist_bar(df[col],[15,20,25,30,35,40,50],['15-19','20-24','25-29','30-34','35-39','≥ 40'],'📊 Umur Ibu saat Hamil (tahun)','#7C3AED', xaxis_title="Umur Ibu (tahun)")
             st.plotly_chart(fig,use_container_width=True); del fig
             st.markdown(f'<div class="card">👩 Terbanyak: <b>{m} tahun</b> ({mn} ibu)</div>',unsafe_allow_html=True)
     with c2:
         col=g(df,'berat_ibu')
         if col:
-            fig,m,mn,_=dist_bar(df[col],[30,40,45,50,55,60,65,70,100],['< 40','40-44','45-49','50-54','55-59','60-64','65-69','≥ 70'],'📊 Berat Badan Ibu (kg)','#EC4899')
+            fig,m,mn,_=dist_bar(df[col],[30,40,45,50,55,60,65,70,100],['< 40','40-44','45-49','50-54','55-59','60-64','65-69','≥ 70'],'📊 Berat Badan Ibu (kg)','#EC4899', xaxis_title="Berat Badan Ibu (kg)")
             st.plotly_chart(fig,use_container_width=True); del fig
             st.markdown(f'<div class="card">⚖️ Terbanyak: <b>{m} kg</b> ({mn} ibu)</div>',unsafe_allow_html=True)
 
@@ -453,20 +454,20 @@ def page_kehamilan(df):
     with c1:
         col=g(df,'tinggi_ayah')
         if col:
-            # Threshold di index 1 (antara '< 160' dan '160-164')
             fig,m,mn,s=dist_bar(df[col],[0,160,165,170,175,190],
                                ['< 160','160-164','165-169','170-174','≥ 175'],
-                               '📊 Tinggi Badan Ayah (cm)','#0891B2',1,'< 160 cm')
+                               '📊 Tinggi Badan Ayah (cm)','#0891B2',1,'< 160 cm',
+                               xaxis_title="Tinggi Ayah (cm)")
             st.plotly_chart(fig,use_container_width=True); del fig
             pdk=(s<160).sum()
             st.markdown(f'<div class="card">📏 Terbanyak: <b>{m}</b> ({mn}) | Pendek (< 160 cm): <b>{pdk}</b> ({fmt(pct(pdk,len(s)))})</div>',unsafe_allow_html=True)
     with c2:
         col=g(df,'tinggi_ibu')
         if col:
-            # Threshold di index 1 (antara '< 150' dan '150-154')
             fig,m,mn,s=dist_bar(df[col],[0,150,155,160,165,175],
                                ['< 150','150-154','155-159','160-164','≥ 165'],
-                               '📊 Tinggi Badan Ibu (cm)','#D946EF',1,'< 150 cm')
+                               '📊 Tinggi Badan Ibu (cm)','#D946EF',1,'< 150 cm',
+                               xaxis_title="Tinggi Ibu (cm)")
             st.plotly_chart(fig,use_container_width=True); del fig
             pdk=(s<150).sum()
             st.markdown(f'<div class="card">📏 Terbanyak: <b>{m}</b> ({mn}) | Pendek (< 150 cm): <b>{pdk}</b> ({fmt(pct(pdk,len(s)))})</div>',unsafe_allow_html=True)
@@ -481,7 +482,6 @@ def page_kehamilan(df):
         with c1:
             fig=px.bar(pd_dist,x='Ke-',y='Jumlah',text='Jumlah',title='📊 Distribusi Paritas (Kehamilan ke-)',color_discrete_sequence=['#6366F1'])
             fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
-            # Tambahkan garis threshold untuk grande multipara (>=4)
             fig.add_shape(type="line", x0=3.5, x1=3.5, y0=0, y1=1, yref="paper",
                          line=dict(color="red", width=2.5, dash="dash"))
             fig.add_annotation(x=3.5, y=1, yref="paper", text="≥ 4 (Grande Multipara)",
@@ -489,10 +489,10 @@ def page_kehamilan(df):
                               xanchor="right", yanchor="bottom", xshift=-4)
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=400,
-                xaxis=dict(tickfont=dict(size=FONT_SIZE)),
-                yaxis=dict(tickfont=dict(size=FONT_SIZE)),
+                xaxis=dict(title="Kehamilan ke-", tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
+                yaxis=dict(title="Jumlah", tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
                 margin=dict(l=10,r=10,t=70,b=30)
             )
             st.plotly_chart(fig,use_container_width=True); del fig
@@ -506,7 +506,7 @@ def page_kehamilan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=400,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -528,7 +528,7 @@ def page_kehamilan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=400,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -548,7 +548,7 @@ def page_kehamilan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=250,
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -575,7 +575,6 @@ def page_imunisasi(df):
                 'Rotavirus 1','Rotavirus 2','Rotavirus 3','Polio 1','Polio 2','Polio 3','Polio 4',
                 'Polio suntik/injeksi Tambahan 1','Polio suntik/injeksi Tambahan 2']
     
-    # Flexible column matching: cari kolom yang mengandung nama imunisasi
     def find_imun_col(name):
         if name in df.columns:
             return name
@@ -600,7 +599,7 @@ def page_imunisasi(df):
         fig.add_vline(x=80,line_dash='dash',line_color='red',annotation_text='Target 80%',annotation_font_color='red')
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=max(550,len(rows)*35),
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
@@ -620,7 +619,7 @@ def page_imunisasi(df):
                 fig=go.Figure(go.Pie(labels=['Lengkap','Tidak'],values=[lgk,n-lgk],marker_colors=['#10B981','#F87171'],hole=.5,textinfo='value+percent',textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B')))
                 fig.update_layout(
                     font=dict(size=FONT_SIZE, color='#1E293B'),
-                    title_font=dict(size=FONT_SIZE_TITLE),
+                    title=dict(font=dict(size=FONT_SIZE_TITLE)),
                     height=320,
                     margin=dict(l=10,r=10,t=20,b=10)
                 )
@@ -650,7 +649,7 @@ def page_asi_mpasi(df):
             fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=250,
                 xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
                 yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -663,10 +662,10 @@ def page_asi_mpasi(df):
         if col:
             sapih=to_num(df[col]).dropna()
             if len(sapih)>0:
-                # Threshold di index 4 (antara '18-23' dan '≥ 24')
                 fig,m,mn,_=dist_bar(sapih,[0,6,12,18,24,30],
                                    ['0-5','6-11','12-17','18-23','≥ 24'],
-                                   '📊 Umur Berhenti Diberi ASI (bulan)','#F59E0B',4,'< 24 bulan (ASI Dini)')
+                                   '📊 Umur Berhenti Diberi ASI (bulan)','#F59E0B',4,'< 24 bulan (ASI Dini)',
+                                   xaxis_title="Umur (bulan)")
                 st.plotly_chart(fig,use_container_width=True); del fig
                 dini=(sapih<24).sum()
                 st.markdown(f'<div class="card">⚠️ Berhenti ASI dini (< 24 bulan): <b>{dini}</b> ({fmt(pct(dini,len(sapih)))})</div>',unsafe_allow_html=True)
@@ -678,8 +677,6 @@ def page_asi_mpasi(df):
         md=df[col].value_counts().reindex(order).fillna(0).astype(int).reset_index(); md.columns=['Umur','Jumlah']
         fig=px.bar(md,x='Umur',y='Jumlah',text='Jumlah',title='📊 Distribusi Umur Mulai Makanan Pendamping ASI',color_discrete_sequence=['#F59E0B'])
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
-        # Garis batas: antara "5 - < 6 bulan" (index 6) dan "6 - < 7 bulan" (index 7) → x=6.5
-        # Dengan fillna(0), semua 9 kategori selalu ada sehingga posisi index tetap konsisten
         fig.add_shape(type="line", x0=6.5, x1=6.5, y0=0, y1=1, yref="paper",
                      line=dict(color="red", width=2.5, dash="dash"))
         fig.add_annotation(x=6.5, y=1, yref="paper", text="< 6 bulan (Makanan Pendamping Dini)",
@@ -687,10 +684,10 @@ def page_asi_mpasi(df):
                           xanchor="right", yanchor="bottom", xshift=-4)
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=450,
-            xaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
-            yaxis=dict(tickfont=dict(size=FONT_SIZE)),
+            xaxis=dict(title="Umur Mulai MPASI", tickfont=dict(size=FONT_SIZE-1), title_font=dict(size=FONT_SIZE_SUBTITLE)),
+            yaxis=dict(title="Jumlah", tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             margin=dict(l=10,r=10,t=70,b=30)
         )
         st.plotly_chart(fig,use_container_width=True); del fig
@@ -736,7 +733,7 @@ def page_pengasuhan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=420,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -751,7 +748,7 @@ def page_pengasuhan(df):
                 fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
                 fig.update_layout(
                     font=dict(size=FONT_SIZE, color='#1E293B'),
-                    title_font=dict(size=FONT_SIZE_TITLE),
+                    title=dict(font=dict(size=FONT_SIZE_TITLE)),
                     height=420,
                     margin=dict(l=10,r=10,t=70,b=10)
                 )
@@ -771,7 +768,7 @@ def page_pengasuhan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=300,
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -837,7 +834,7 @@ def render_determinan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title_font=dict(size=FONT_SIZE_TITLE),
+            title=dict(font=dict(size=FONT_SIZE_TITLE)),
             height=max(550,len(rf)*50),
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
@@ -868,7 +865,7 @@ def render_determinan(df):
             fig=px.imshow(corr,text_auto=True,color_continuous_scale='RdYlGn_r',aspect='auto',labels=dict(color='Korelasi'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title_font=dict(size=FONT_SIZE_TITLE),
+                title=dict(font=dict(size=FONT_SIZE_TITLE)),
                 height=500,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -902,20 +899,19 @@ def page_konsumsi_ibu(df):
         col=g(df,key)
         if col:
             with container:
-                # PERBAIKAN: Hanya tambahkan threshold untuk 'Makan Lengkap', tidak untuk 'Kudapan'
                 if 'Lengkap' in title:
-                    # Threshold di index 3 (antara '2' dan '3')
                     fig,m,mn,s=dist_bar(df[col],[0,1,2,3,4,5,8],
                                        ['0','1','2','3','4','≥ 5'],
-                                       f'📊 {title} (24 jam)',clr,3,'< 3x/hari')
+                                       f'📊 {title} (24 jam)',clr,3,'< 3x/hari',
+                                       xaxis_title="Frekuensi Makan")
                     st.plotly_chart(fig,use_container_width=True); del fig
                     kurang=(s<3).sum()
                     st.markdown(f'<div class="card">⚠️ Makan < 3×: <b>{kurang}</b> ({fmt(pct(kurang,len(s)))})</div>',unsafe_allow_html=True)
                 else:
-                    # Kudapan - tanpa garis threshold
                     fig,m,mn,s=dist_bar(df[col],[0,1,2,3,4,5,8],
                                        ['0','1','2','3','4','≥ 5'],
-                                       f'📊 {title} (24 jam)',clr)
+                                       f'📊 {title} (24 jam)',clr,
+                                       xaxis_title="Frekuensi Makan")
                     st.plotly_chart(fig,use_container_width=True); del fig
     gc.collect()
 
