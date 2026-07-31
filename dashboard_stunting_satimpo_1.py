@@ -168,7 +168,7 @@ def fmt(x): return f"{x:.1f}".replace(".",",")+"%"
 def col_find(df, keyword):
     """Find column by keyword (case-insensitive partial match)"""
     for c in df.columns:
-        if keyword.lower() in c.lower(): return c
+        if keyword.lower() in c.strip().lower(): return c
     return None
 
 def multi_count(series, pattern):
@@ -187,7 +187,7 @@ def bar_multi(df, col, items, labels, title, clr="#0D9488"):
     fig.update_traces(textposition="outside", cliponaxis=False, textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
     fig.update_layout(
         font=dict(size=FONT_SIZE, color='#1E293B'),
-        title=dict(font=dict(size=FONT_SIZE_TITLE)),
+        title_font=dict(size=FONT_SIZE_TITLE),
         height=max(300, len(rows)*55),
         xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
         yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -237,7 +237,7 @@ def dist_bar(series, bins, labels, title, clr, threshold_index=None, threshold_l
     
     fig.update_layout(
         font=dict(size=FONT_SIZE, color='#1E293B'),
-        title=dict(font=dict(size=FONT_SIZE_TITLE)),
+        title_font=dict(size=FONT_SIZE_TITLE),
         height=400,
         xaxis=dict(tickfont=dict(size=FONT_SIZE)),
         yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -328,7 +328,7 @@ def page_ringkasan(df):
         fig.add_vline(x=14.05,line_dash='dash',line_color='#0F766E',annotation_text='Kota Bontang: 14,05%',annotation_font_color='#1E293B',annotation_position='bottom right')
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=550,
             xaxis=dict(range=[0,25], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -489,7 +489,7 @@ def page_kehamilan(df):
                               xanchor="right", yanchor="bottom", xshift=-4)
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=400,
                 xaxis=dict(tickfont=dict(size=FONT_SIZE)),
                 yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -506,7 +506,7 @@ def page_kehamilan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=400,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -528,7 +528,7 @@ def page_kehamilan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=400,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -540,7 +540,7 @@ def page_kehamilan(df):
     for key,lbl in items:
         col=g(df,key)
         if col:
-            ya=(df[col].astype(str).str.lower()=='ya').sum()
+            ya=(df[col].astype(str).str.strip().str.lower()=='ya').sum()
             rows.append({"Variabel":lbl,"Jumlah":ya,"Persen":pct(ya,n)})
     if rows:
         p=pd.DataFrame(rows)
@@ -548,7 +548,7 @@ def page_kehamilan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=250,
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -574,11 +574,25 @@ def page_imunisasi(df):
                 'PCV 1','PCV 2','PCV 3','Campak-Rubella (MR)','Campak-Rubella lanjutan (MR/MMR)',
                 'Rotavirus 1','Rotavirus 2','Rotavirus 3','Polio 1','Polio 2','Polio 3','Polio 4',
                 'Polio suntik/injeksi Tambahan 1','Polio suntik/injeksi Tambahan 2']
-    rows=[]
-    for name in imun_names:
+    
+    # Flexible column matching: cari kolom yang mengandung nama imunisasi
+    def find_imun_col(name):
         if name in df.columns:
-            ya=(df[name].astype(str).str.lower()=='ya').sum()
+            return name
+        for c in df.columns:
+            if name.lower() in c.lower():
+                return c
+        return None
+    
+    rows=[]
+    matched_cols={}
+    for name in imun_names:
+        col = find_imun_col(name)
+        if col:
+            ya=(df[col].astype(str).str.strip().str.lower()=='ya').sum()
             rows.append({'Imunisasi':name,'Sudah':ya,'Belum':n-ya,'Cakupan':pct(ya,n)})
+            matched_cols[name]=col
+    
     if rows:
         idf=pd.DataFrame(rows).sort_values('Cakupan',ascending=True)
         fig=px.bar(idf,x='Cakupan',y='Imunisasi',orientation='h',text=idf['Cakupan'].apply(fmt),color='Cakupan',color_continuous_scale=['#DC2626','#F59E0B','#16A34A'],color_continuous_midpoint=50)
@@ -586,7 +600,7 @@ def page_imunisasi(df):
         fig.add_vline(x=80,line_dash='dash',line_color='red',annotation_text='Target 80%',annotation_font_color='red')
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=max(550,len(rows)*35),
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
@@ -596,21 +610,25 @@ def page_imunisasi(df):
         st.plotly_chart(fig,use_container_width=True); del fig
 
         st.markdown('<div class="sh">🎯 Imunisasi Dasar Lengkap</div>',unsafe_allow_html=True)
-        idl=[c for c in ['Hepatitis B 0','BCG','DPT-HB-Hib 1','DPT-HB-Hib 2','DPT-HB-Hib 3','Polio 1','Polio 2','Polio 3','Polio 4','Campak-Rubella (MR)'] if c in df.columns]
-        chk=df[idl].apply(lambda s:s.astype(str).str.lower()=='ya')
-        lgk=chk.all(axis=1).sum()
-        c1,c2=st.columns([1,2])
-        with c1:
-            fig=go.Figure(go.Pie(labels=['Lengkap','Tidak'],values=[lgk,n-lgk],marker_colors=['#10B981','#F87171'],hole=.5,textinfo='value+percent',textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B')))
-            fig.update_layout(
-                font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
-                height=320,
-                margin=dict(l=10,r=10,t=20,b=10)
-            )
-            st.plotly_chart(fig,use_container_width=True); del fig
-        with c2:
-            st.markdown(f'<div class="card" style="font-size:1rem"><b>IDL</b> = 10 imunisasi wajib<br><br>✅ Lengkap: <b>{lgk} ({fmt(pct(lgk,n))})</b><br>❌ Tidak: <b>{n-lgk} ({fmt(pct(n-lgk,n))})</b></div>',unsafe_allow_html=True)
+        idl_names=['Hepatitis B 0','BCG','DPT-HB-Hib 1','DPT-HB-Hib 2','DPT-HB-Hib 3','Polio 1','Polio 2','Polio 3','Polio 4','Campak-Rubella (MR)']
+        idl=[matched_cols[nm] for nm in idl_names if nm in matched_cols]
+        if idl:
+            chk=df[idl].apply(lambda s:s.astype(str).str.strip().str.lower()=='ya')
+            lgk=chk.all(axis=1).sum()
+            c1,c2=st.columns([1,2])
+            with c1:
+                fig=go.Figure(go.Pie(labels=['Lengkap','Tidak'],values=[lgk,n-lgk],marker_colors=['#10B981','#F87171'],hole=.5,textinfo='value+percent',textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B')))
+                fig.update_layout(
+                    font=dict(size=FONT_SIZE, color='#1E293B'),
+                    title_font=dict(size=FONT_SIZE_TITLE),
+                    height=320,
+                    margin=dict(l=10,r=10,t=20,b=10)
+                )
+                st.plotly_chart(fig,use_container_width=True); del fig
+            with c2:
+                st.markdown(f'<div class="card" style="font-size:1rem"><b>Imunisasi Dasar Lengkap</b> = 10 imunisasi wajib<br><br>✅ Lengkap: <b>{lgk} ({fmt(pct(lgk,n))})</b><br>❌ Tidak: <b>{n-lgk} ({fmt(pct(n-lgk,n))})</b></div>',unsafe_allow_html=True)
+    else:
+        st.info("⚠️ Data imunisasi tidak ditemukan. Pastikan kolom imunisasi ada di file CSV.")
     gc.collect()
 
 # ===== 4. ASI & MPASI =====
@@ -624,7 +642,7 @@ def page_asi_mpasi(df):
         for key,lbl in items:
             col=g(df,key)
             if col:
-                ya=(df[col].astype(str).str.lower()=='ya').sum()
+                ya=(df[col].astype(str).str.strip().str.lower()=='ya').sum()
                 rows.append({"Variabel":lbl,"Persen":pct(ya,n)})
         if rows:
             p=pd.DataFrame(rows)
@@ -632,7 +650,7 @@ def page_asi_mpasi(df):
             fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=250,
                 xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
                 yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -669,7 +687,7 @@ def page_asi_mpasi(df):
                           xanchor="right", yanchor="bottom", xshift=-4)
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=450,
             xaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -718,7 +736,7 @@ def page_pengasuhan(df):
             fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=420,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
@@ -733,7 +751,7 @@ def page_pengasuhan(df):
                 fig.update_traces(textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
                 fig.update_layout(
                     font=dict(size=FONT_SIZE, color='#1E293B'),
-                    title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                    title_font=dict(size=FONT_SIZE_TITLE),
                     height=420,
                     margin=dict(l=10,r=10,t=70,b=10)
                 )
@@ -745,7 +763,7 @@ def page_pengasuhan(df):
     for key,lbl in items:
         col=g(df,key)
         if col:
-            ya=(df[col].astype(str).str.lower()=='ya').sum()
+            ya=(df[col].astype(str).str.strip().str.lower()=='ya').sum()
             rows.append({"Variabel":lbl,"Jumlah":ya,"Persen":pct(ya,n)})
     if rows:
         p=pd.DataFrame(rows)
@@ -753,7 +771,7 @@ def page_pengasuhan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=300,
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE)),
@@ -819,7 +837,7 @@ def render_determinan(df):
         fig.update_traces(textposition='outside',cliponaxis=False,textfont=dict(size=FONT_SIZE_TRACE, color='#1E293B'))
         fig.update_layout(
             font=dict(size=FONT_SIZE, color='#1E293B'),
-            title=dict(font=dict(size=FONT_SIZE_TITLE)),
+            title_font=dict(size=FONT_SIZE_TITLE),
             height=max(550,len(rf)*50),
             xaxis=dict(range=[0,110], tickfont=dict(size=FONT_SIZE), title_font=dict(size=FONT_SIZE_SUBTITLE)),
             yaxis=dict(tickfont=dict(size=FONT_SIZE-1)),
@@ -850,7 +868,7 @@ def render_determinan(df):
             fig=px.imshow(corr,text_auto=True,color_continuous_scale='RdYlGn_r',aspect='auto',labels=dict(color='Korelasi'))
             fig.update_layout(
                 font=dict(size=FONT_SIZE, color='#1E293B'),
-                title=dict(font=dict(size=FONT_SIZE_TITLE)),
+                title_font=dict(size=FONT_SIZE_TITLE),
                 height=500,
                 margin=dict(l=10,r=10,t=70,b=10)
             )
