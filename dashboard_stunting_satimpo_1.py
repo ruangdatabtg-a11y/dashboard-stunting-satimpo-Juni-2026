@@ -163,7 +163,7 @@ div[data-testid="column"] {
 
 # ===== UTILITAS =====
 def pct(n,t): return round((n/t)*100,1) if t>0 else 0
-def fmt(x): return f"{x:.1f}".replace(".",",")+"%"
+def fmt(x): return f"{x:.2f}".replace(".",",")+"%"
 
 def col_find(df, keyword):
     """Find column by keyword (case-insensitive partial match)"""
