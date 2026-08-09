@@ -412,7 +412,7 @@ def page_ringkasan(df):
     col=g(df,'morb')
     if col:
         st.markdown('<div class="sh">🏥 Morbiditas Balita</div>',unsafe_allow_html=True)
-        fig=bar_multi(df,col,['Infeksi Saluran Pernapasan Akut','DIARE','PNEUMONIA','Tuberkulosis'],['Infeksi Saluran Pernapasan Akut','Diare','Pneumonia','Tuberkulosis Paru'],'📊 Prevalensi Penyakit','#DC2626')
+        fig=bar_multi(df,col,['ISPA','DIARE','PNEUMONIA','Tuberkulosis'],['Infeksi Saluran Pernapasan Akut','Diare','Pneumonia','Tuberkulosis Paru'],'📊 Prevalensi Penyakit','#DC2626')
         if fig: st.plotly_chart(fig,use_container_width=True); del fig
 
     # Kelahiran
@@ -832,7 +832,7 @@ def render_determinan(df):
 
     col_m=g(df,'morb')
     if col_m:
-        for pat,lbl in [('Infeksi Saluran Pernapasan Akut','Infeksi Saluran Pernapasan Akut'),('DIARE','Diare')]:
+        for pat,lbl in [('ISPA','Infeksi Saluran Pernapasan Akut'),('DIARE','Diare')]:
             cnt=multi_count(df[col_m],pat); rf.append((lbl,cnt,pct(cnt,n),'Penyakit'))
 
     col_a=g(df,'akses')
@@ -885,7 +885,7 @@ def render_determinan(df):
             flags['KEK']=df[col_k].astype(str).str.contains('KEK',case=False,na=False)
         if col_imd: flags['Tidak Inisiasi Menyusui Dini']=df[col_imd].astype(str).str.lower()!='ya'
         if col_m:
-            flags['Infeksi Saluran Pernapasan Akut']=df[col_m].astype(str).str.contains('Infeksi Saluran Pernapasan Akut',case=False,na=False)
+            flags['Infeksi Saluran Pernapasan Akut']=df[col_m].astype(str).str.contains('ISPA',case=False,na=False)
             flags['Diare']=df[col_m].astype(str).str.contains('DIARE',case=False,na=False)
         if len(flags.columns)>=2:
             corr=flags.astype(int).corr().round(2)
