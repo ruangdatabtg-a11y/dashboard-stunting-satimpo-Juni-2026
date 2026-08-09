@@ -348,6 +348,33 @@ def page_ringkasan(df):
     with c1: st.metric("👶 Total Balita Stunting",f"{n} balita"); st.markdown('<p style="color:#0F766E;font-size:.9rem;margin-top:-10px">Dari 347 balita ditimbang (13,83%)</p>',unsafe_allow_html=True)
     with c2: st.metric("📖 Punya Buku KIA",f"{kia_ya} dari {n}"); st.markdown(f'<p style="color:#0F766E;font-size:.9rem;margin-top:-10px">{fmt(pct(kia_ya,n))}</p>',unsafe_allow_html=True)
 
+    # Jumlah Balita Stunting per RT
+    rt_col=col_find(df,'RT')
+    if rt_col:
+        st.markdown('<div class="sh">🏘️ Jumlah Balita Stunting Menurut RT</div>',unsafe_allow_html=True)
+        rt_dist=df[rt_col].value_counts().reset_index()
+        rt_dist.columns=['RT_num','Jumlah']
+        rt_dist['RT_num']=rt_dist['RT_num'].apply(lambda x: int(float(x)) if str(x).replace('.','').replace('-','').isdigit() else x)
+        # Urutkan: jumlah ascending, jika sama urutkan RT descending (agar di grafik horizontal RT kecil di atas)
+        rt_dist=rt_dist.sort_values(['Jumlah','RT_num'],ascending=[True,False])
+        rt_dist['RT']=rt_dist['RT_num'].apply(lambda x: f'RT {x}')
+        fig=px.bar(rt_dist,x='Jumlah',y='RT',orientation='h',text='Jumlah',
+                   title='📊 Jumlah Balita Stunting per RT',
+                   color='Jumlah',color_continuous_scale=['#16A34A','#F59E0B','#DC2626'])
+        fig.update_traces(textposition='outside',cliponaxis=False,
+                          textfont=dict(color='#1E293B',size=FONT_SIZE_TRACE+6))
+        fig.update_layout(font=dict(color='#1E293B',size=FONT_SIZE),
+                          title_font=dict(size=FONT_SIZE_TITLE),
+                          height=max(600,len(rt_dist)*40),
+                          bargap=0.15,
+                          xaxis=dict(title='Jumlah Balita',tickfont=dict(size=FONT_SIZE),
+                                     title_font=dict(size=FONT_SIZE_SUBTITLE),dtick=1),
+                          yaxis=dict(title='RT',tickfont=dict(size=FONT_SIZE),
+                                     title_font=dict(size=FONT_SIZE_SUBTITLE)),
+                          margin=dict(l=10,r=60,t=70,b=30),showlegend=False,
+                          coloraxis_showscale=False)
+        st.plotly_chart(fig,use_container_width=True); del fig
+
     # Distribusi
     st.markdown('<div class="sh">📊 Distribusi Karakteristik</div>',unsafe_allow_html=True)
     c1,c2=st.columns(2)
@@ -924,7 +951,8 @@ def main():
     <div style="font-size:.95rem;color:#1E293B;line-height:1.7">
     Indepth survey terhadap <b>seluruh 48 balita stunting</b> di Kel. Satimpo (Juni 2026).
     Dari 347 balita ditimbang, <b>48 teridentifikasi stunting (13,83%)</b> — seluruhnya menjadi responden (<i>total sampling</i>).
-    Referensi: SSGI 2024.</div></div>""", unsafe_allow_html=True)
+    Referensi: SSGI 2024.<br>
+    <b>Catatan:</b> 1 orang balita telah berusia lebih dari 5 tahun pada saat pelaksanaan indepth study, sehingga analisis berbasis umur balita (0-59 bulan) menggunakan 47 responden.</div></div>""", unsafe_allow_html=True)
 
     try: 
         df = load_data()
