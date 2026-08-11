@@ -980,6 +980,9 @@ def main():
     st.sidebar.markdown('<h2 style="color:#0F766E;text-align:center;font-size:1.2rem">📋 Info</h2>', unsafe_allow_html=True)
     st.sidebar.markdown(f"**Responden tampil:** {len(df)}\n\n**Desain:** Total sampling\n\n**Referensi:** SSGI 2024")
     st.sidebar.markdown("---")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown('<a href="https://sites.google.com/view/desa-cantik-kel-satimpo/home" target="_blank" style="display:block;text-align:center;background:linear-gradient(135deg,#EA580C,#C2410C);color:white;padding:12px 16px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:1rem;margin-bottom:10px">🌐 Website Desa Cantik<br><span style="font-size:0.8rem;font-weight:normal;opacity:0.9">Kelurahan Satimpo 2026</span></a>',unsafe_allow_html=True)
+    st.sidebar.markdown("---")
     st.sidebar.info("**Prevalensi Stunting Satimpo:**\n48 balita stunting dari 347 balita ditimbang (13,83%)\n\n**Prevalensi Stunting Kota Bontang:**\n1.389 dari 9.884 balita ditimbang (14,05%)\n\n**Peringkat Satimpo:**\nUrutan ke-8 dari 15 kelurahan di Kota Bontang")
 
     if len(df) == 0:
@@ -999,9 +1002,9 @@ def main():
         {"key": "konsumsi", "icon": "🍽️", "label": "Konsumsi Ibu"},
     ]
     
-    cols = st.columns(len(menu_data))
+    cols = st.columns(len(menu_data) + 1)
     
-    for col, item in zip(cols, menu_data):
+    for col, item in zip(cols[:len(menu_data)], menu_data):
         with col:
             is_active = st.session_state.menu_aktif == item["key"]
             
@@ -1021,6 +1024,17 @@ def main():
                 ):
                     st.session_state.menu_aktif = item["key"]
                     st.rerun()
+    
+    with cols[-1]:
+        st.markdown("""
+        <a href="https://sites.google.com/view/desa-cantik-kel-satimpo/home" target="_blank" style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            background:linear-gradient(135deg,#EA580C,#C2410C);color:white;
+            padding:10px 8px;border-radius:10px;text-decoration:none;
+            min-height:72px;text-align:center;
+        "><span style="font-size:1.3rem">🌐</span>
+        <span style="font-size:0.8rem;font-weight:600;margin-top:4px">Website Desa Cantik</span></a>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
